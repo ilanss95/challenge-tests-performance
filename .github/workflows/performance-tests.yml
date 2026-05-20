@@ -1,0 +1,45 @@
+name: Performance Tests Althea
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  performance-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du repository
+        uses: actions/checkout@v4
+
+      - name: Installer Hey
+        run: |
+          wget https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64
+          chmod +x hey_linux_amd64
+          sudo mv hey_linux_amd64 /usr/local/bin/hey
+
+      - name: Test performance avec Hey
+        run: |
+          hey -n 100 -c 10 http://54.226.195.234/ | tee hey-result.txt
+
+      - name: Installer K6
+        run: |
+          sudo gpg -k
+          curl -s https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt update
+          sudo apt install k6 -y
+
+      - name: Test performance avec K6
+        run: |
+          k6 run k6-test.js | tee k6-result.txt
+
+      - name: Sauvegarder les résultats
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: |
+            hey-result.txt
+            k6-result.txt
