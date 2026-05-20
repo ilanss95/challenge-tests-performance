@@ -32,9 +32,9 @@ jobs:
           go install github.com/rakyll/hey@latest
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
-      - name: Verifier Hey
+      - name: Test rapide Hey
         run: |
-          hey -h
+          hey -n 1 -c 1 $TARGET_URL
 
       - name: Test performance avec Hey
         run: |
